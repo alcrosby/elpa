@@ -1,0 +1,26 @@
+#' Sample ELPA Data anonymized from Springdale Public Schools
+#'
+#' Contains information from the Spring 2020, Spring 2021, and Spring 2022 administrations of the
+#' ELPA21 Summative Exam given to Springdale Public School English Language Learners.  All of the
+#' identifying information has been removed, including the names of the school buildings.  The helper
+#' function "helper.buildelpadata" is included in the package, along with a helper function named
+#' "helper.deidentify" that can remove potentially personally identifiable information from a data set.
+#' There are also helper functions for reading in your own data into the format that this package
+#' expects.
+#'
+#' @format A tibble with 22,906 rows and 7 variables
+#' \describe{
+#'   \item{Student.ID}{A unique identifier for each student record, must be the same across School Years}
+#'   \item{Enrolled.Grade}{The Grade of the student, expected values are KG,01,02,03,...,10,12,12}
+#'   \item{School}{A string identifying the school(s) (or other units), should be the same across School Years}
+#'   \item{Ethnicity}{The ethnicity of the students. The function helper.cleandata() will convert Ethnicity into the expected format from a variety of common indications.}
+#'   \item{Scale.Score}{The ELPA21 Overall Scale Score}
+#'   \item{Performance.Level}{The ELPA21 Overall Performance Level}
+#'   \item{SY}{The Shool Year when the test was administered}
+#' }
+#'
+#' @source Created by Springdale Public Schools with data provided by the State of Arkansas Department of Education
+#'
+#' @examples
+#' data(elpadata)          # Lazy loading.  Data becomes visible as soon as the package is loaded
+"elpadata"
