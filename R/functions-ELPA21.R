@@ -14,7 +14,8 @@ NULL
 # Last Update: 8 June 2022
 ######################################################
 # Abstract:
-#   These are the functions used in the ELPA21 analysis
+#   These are functions for analyzing ELPA data with R
+#   as used by Springdale Public Schools.
 ######################################################
 
 ######################################################
