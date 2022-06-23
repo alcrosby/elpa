@@ -1,7 +1,7 @@
 Package: elpa
 Type: Package
 Title: Tools for Analyzing ELPA21 Test Data
-Version: 0.2.1
+Version: 0.2.3
 Author: Albert Crosby
 Maintainer: Albert Crosby <acrosby@sdale.org>
 Description: Tools for importing ELPA21 Test Data, creating charts and performing simple analyses.
@@ -20,3 +20,8 @@ Depends:
     R (>= 2.10),
     ggplot2 (>= 2.2),
     ggalluvial
+VignetteBuilder: knitr
+Suggests: 
+    utils,
+    markdown,
+    knitr

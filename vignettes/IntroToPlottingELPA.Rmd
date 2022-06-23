@@ -1,0 +1,351 @@
+---
+title: "Intro to Plotting ELPA Data"
+author: "Albert Crosby"
+date: '2022-06-23'
+email: acrosby@sdale.org
+output:
+      rmarkdown::html_vignette:
+        fig_caption: yes
+vignette: >
+  %\VignetteIndexEntry{Intro to Plotting ELPA Data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,fig.align="center")
+```
+
+```{r load-data, message=FALSE}
+library(elpa)
+library(tidyverse)
+library(ggplot2)
+library(ggalluvial)
+
+# Reading the ELPA data for 2020 from a CSV file:
+
+elpa2020<-read.csv(file="c:/users/acrosby/Documents/ELPA2021/elpaspring2020.csv") %>%
+# Pick the needed fields from the CSV and give expected names
+  select(
+    Student.ID=StudentID,
+    Enrolled.Grade=EnrolledGrade,
+    School=EnrolledSchool,
+    Ethnicity=Ethnicity,
+    Scale.Score=ELPA21SummativeScaleScore,
+    Performance.Level=ELPA21SummativePerformanceLevel
+  )%>%
+  mutate(SY='2020')%>%
+  helper.cleandata()
+
+# Read the ELPA 2021 files downloaded and extracted into a specific folder 
+elpa2021<-readelpascores("C:/Users/acrosby/Downloads/ELPA2021/")%>%
+  helper.reducedata(SY='2021') %>%
+    helper.cleandata()
+
+# Read the ELPA 2022 files downloaded and extracted into a specific folder 
+elpa2022<-readelpascores("C:/Users/acrosby/Downloads/ELPASpring2022/")%>%
+  helper.reducedata(SY='2021') %>%
+  helper.cleandata()
+
+elpa.sdale<-bind_rows(elpa2020,elpa2021,elpa2022)
+
+######################################################
+# Combine the dataset(s) from above into a data.table
+# named elpadata
+######################################################
+
+```
+
+## NOTE
+This guide was not originally intended as a package vignette.  It may have some layout 
+and other issues.
+
+IT IS NOT COMPLETE AT THIS TIME AND IS DEFINITELY A WORK IN PROGRESS.  IT IS INCLUDED
+PARTIALLY AS A PLACEHOLDER, AND A WAY TO DEMONSTRATE AT LEAST SOME OF THE FUNCTIONS.
+
+The charts do not look at all similiar to what they appear in the original document.  If
+I can figure out how to simply load the PDF as a vignette with the R package, that's 
+what I will do...
+
+## Introduction
+
+This guide is intended as a walk-through for an evaluation of ELPA21 results for multiple years.  The data
+is retrieved directly from the ELPA21 portal (or other source that can supply the needed information).  This
+document, and the charts and tables it includes, was created using the R programming environment.  This document can
+also serve as the vignette (introductory document) for the elpa21 package that will be available for you to install 
+and use.
+
+In this guide, we'll be using ELPA21 assessment results for Springdale Public Schools in Springdale, Arkanas
+for three administrations of the test:
+
+* Spring 2020, in the 2019-2020 School Year
+* Spring 2021, in the 2020-2021 School Year
+* Spring 2022, in the 2021-2022 School Year
+
+Sample charts are included and explored, the programs used are introduced, and guidance is provided on
+recreating the results with data from other districts or state wide.
+
+
+
+### English Learners
+
+Language Minority (LMS) Students are any students who live in a household where languages other than
+English is spoken on a regular basis.
+
+English Learners are Language Minority Students who have a documented need for supportive intervention
+demonstrated on one or more measurement tools.
+
+The primary measurement tool in Arkansas is the ELPA21 English Language Proficiency Assessment.
+
+In Springdale Public Schools, over 50% of the student body is considered "Language Minority Students", and 
+between 30% and 40% of the entire student body is idenitfied as English Learners and receive supportive ELL
+intervention services.
+
+Most of Springdale's LMS students (and those receiving language services) are recent immigrants to the 
+United States.
+They also experience high rates of mobility as families relocate or return to their country of origin.
+
+There are two major groups of LMS students in Springdale:  Hispanic/Latino students who speak Spanish, and
+Islander students, primarily from the Marshall Islands who speak Marshallese.
+
+### ELPA21
+
+ELPA21 is an assessment that measures English learner's mastery of communication skills needed to meet
+academic standards.  ELPA21 is created and managed by consortium of states, housed at the National Center for 
+Research, Evaluation, Standards and Student Testing at the University of California, Los Angeles.
+You can learn more about the ELPA21 suite of assessments at <https://elpa21.org>.
+
+Arkansas, like most states using ELPA21,administers two versions of the ELPA21 test.  
+
+The ***Screener*** is given to English 
+learners when they arrive in the state for the first time, and is used to determine if they need 
+supportive intervention services to ensure their academic success. 
+
+The ***Summative*** ELPA21 is given to every Arkansas student receiving English Language services
+in the Spring semester -- usually sometime between early February and mid April.  
+The Summative exam assesses 
+skills in four domains: listening, reading, speaking and writing.  As well as scores in each domain, 
+learners also receive an Overall Proficiency Level and an Overall Comprehension Level.
+
+Students who receive a "Proficient" Overall Proficiency Level are considered for exiting services, along
+with other factors such as performance on standardized tests and classroom performance.
+
+The ELPA21 test **does not** measure academic performance.  It measures the ability of an English Learner
+to access coursework and achieve academic progress at the same rate as their age and grade level English
+fluent peers.
+
+The charts and evaluations in this guide use the Summative test results, specifically the Overall Proficiency Level.
+
+### R
+
+This guide, and the entire project, makes extensive use of the **R** environment.
+
+**R**, one of the world's leading statistical software suites, is available completely for free.  It's also
+fairly easy to read, and there are many excellent guides available.
+
+**R** can read and write data from different sources, such as CSV or Excel, calculate simple summaries or 
+statistical models to explore the data, and create simple or complex graphics to give insight to
+the data.
+
+The **R** environment is more than just a programming language. There are several graphical
+editors, a batch mode, hundreds of community contributed "packages" that extend its functionality, and even
+a web server to allow interactive data exploration on-line.
+
+**R** is created, "owned" and maintained by a non-profit organization: [The R Foundation](https://r-project.org).
+**R** is distributed as Free Software under the terms of the Free Software Foundation's GNU General Public
+License.  You can learn more about R on their web page at <https://r-project.org>.
+
+This guide will not attempt to guide you through writing an **R** program -- but will help you *execute* the
+instructions needed to recreate these charts with your own data.
+
+The **R** environment is often compared to the **SAS** System, which you may have used in a university
+course.  **SAS** can do most of the things that R can; but unlike **R**, **SAS** comes with commercial
+support ***and*** a hefty price tag.
+
+### RStudio
+
+RStudio is a popular (and powerful) graphical front end for the R environment.  Much like R itself, 
+RStudio is
+available completely for free -- though the company behind RStudio also offers paid support and enhanced
+products for a fee (that allows them to continue existing).
+
+If want to recreate this
+document using your
+own data, I strongly recommend starting with installing the free version of RStudio Desktop.
+
+You can download RStudio at <https://www.rstudio.com/products/rstudio/>
+
+RStudio Desktop is available for Windows, MacOS and Linux.
+
+### R Markdown
+
+This document was created with R Markdown. Markdown is a simple formatting syntax for authoring HTML, PDF,
+and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+An R Markdown document allows you to create high quality dynamic reports.  You can mix plain text
+with R programming code so that one file contains the descriptive text *and* the supporting statistics,
+tables and charts.
+
+While this guide itself is written in RMarkdown, and the files used for creating it are available, teaching
+RMarkdown itself is a task beyond it's scope.
+
+All of the charts included "in-line" as figures in this document can also be generated as full-size pages
+for printing or including in a slide show.
+
+In the section that discusses how to recreate these charts on your own, there will be more detail on how to 
+generate the included charts and tables using R and RStudio..
+
+\newpage
+
+## Exploring the ELPA21 Data Visually
+
+Once the data of ELPA21 scores is loaded, a series of simple evaluation charts can be created. The actual 
+loading of the data will be covered in a later section.
+
+### Number of Students Tested Each Year
+
+Figure \ref{fig:ntested} simply shows the number of students tested each year, across all schools and 
+grades on a "bar
+chart".  Each bar is divided into sections showing the Overall ELPA Proficiency Level, and labelled with
+the number of students assessed at that level:
+
+```{r ntested,fig.cap="Number of Students By Year"}
+elpa.plot.ntested(elpadata,label.size=4)+ggtitle("Number of Students Tested By Year")
+```
+
+Of course, that can be broken down in several different ways.  In R, we can "facet" graphs by different
+distinctions such as "Grade Band" (Figure \ref{fig:n-band}):
+
+```{r n-band,fig.cap="Number of Students By Year and ELPA Grade Band"}
+  elpadata %>% mutate(GradeBand=helper.gradeband(Enrolled.Grade))%>%
+    elpa.plot.ntested(label.size=2)+ 
+      facet_grid(GradeBand~.,as.table=F,switch='both')+
+      theme(axis.text.y=element_text(),axis.line.y=element_blank(),axis.ticks.y=element_blank())+
+      ggtitle("ELPA Students Tested By Grade Band")
+```
+
+The Grade Bands used in this chart reflect the testing grade bands of the ELPA21 Summative Assessment itself.
+
+\newpage
+
+## Examining the Distribution of ELPA Scores
+
+The students who take the ELPA test each year changes based on who enters the district as an English Learner
+and who gains sufficient English language skills to be exited from services.  This
+implies that the distribution of scores over time may change due to factors beyond the district's control.
+
+A "histogram" is a kind of bar chart that shows the number of students who scored within a specified range.
+Figure \ref{fig:histogram} is a histogram of the scaled score for the students tested in 
+Springdale for all three years.
+
+```{r histogram,fig.cap="Distribution of Scaled Scores By Year"}
+elpa.plot.histogram(elpadata)
+```
+
+A guick review of Figure \ref{fig:histogram} suggests that the distribution of scores in Springdale may be 
+shifting to the left, lower skills, over time. This
+could be caused by any number of factors, including exiting more highly skilled students from services, and
+an influx of new arrivals with limited English skills.
+
+The ELPA21 consortium cautions that it is not appropriate to compare Scale Scores across the Grade Bands of
+the test, so Figure \ref{fig:histogram} may lead to some inaccurate conclusions.
+
+R allows us to facet a chart by multiple dimensions.  In Figure \ref{fig:hist-band}, we can see the
+distribution of Scaled Score by the ELPA21 Grade Bands.
+
+```{r hist-band,fig.cap="Distribution of Scaled Scores By Year and Grade Band"}
+elpadata %>% mutate(GradeBand=helper.gradeband(Enrolled.Grade))%>%
+  elpa.plot.histogram(binwidth=100) + facet_grid(GradeBand ~ SY)
+
+```
+
+Figure \ref{fig:hist-band} allows us to compare across years and across grade bands.  There are still some
+difficulties in drawing conclusions from this chart:  each faceted plot is rather small, and the number of
+students tested in each band varies.  That variation in n size makes it hard to know if a greater 
+*proportion* of students are scoring lower or higher.
+
+There is a statistical approach called a "Density Chart" that addresses this issue.  It's similar to a
+histogram, but instead of bars for counts, it draws a smoothed curve where all of the area under the
+curve adds
+to 100%.  Figure \ref{fig:density-all} shows the density distribution for all 3 years by grade level overlaid.
+
+```{r density-all,fig.cap="Scaled Score Density Distribution by Year and Grade"}
+ elpa.plot.density.allyears(elpadata)
+```
+
+The density distributions in Figure \ref{fig:density-all} are much easier to compare and draw potential
+conclusions from than the histograms in Figure \ref{fig:hist-band}.  The distributions, within each grade
+level, look substantially the same for most combinations.
+
+A Z-test can be used to determine the similarity of two density distributions. 
+Figure \ref{fig:denscomp} shows that comparison for School Years 2021 and 2022, by grade level.
+
+```{r denscomp, message=FALSE,fig.cap="Scaled Score Density Distribution Comparison"}
+elpa.plot.density.compare(elpadata,2021,2022)
+```
+
+In Figure \ref{fig:denscomp}, we observe that, when comparing 2021 scores to 2022 scores, there was no
+significant difference in the distributions for most grades.  The distribution of Kindergartner scores
+on the Spring Summative assessment is significantly different, which suggests that further investigation
+might be justified.
+
+\newpage
+## Comparing Testing Across Years
+
+There are three primary reasons to examine ELPA21 test results: 
+
+1. Determine the language skills of students being taught in the current year
+2. Identify changes in the language skills demographic of our school population for planning purposes
+3. Reflect on the success or challenge in moving students forward in the path to English proficiency and future academic success
+
+Charts that show the number of students tested each year, like Figures \ref{fig:ntested}, \ref{fig:n-band}
+and \ref{fig:n-eth} only truly address the first two reasons, but fail to show the progress made in moving
+students, individually or in aggregate, towards English proficiency.
+
+```{r n-eth,message=FALSE,fig.dim=c(7,2.5),fig.cap="Number tested by Year and Ethnicity"}
+  elpa.plot.ntested(elpadata)+ggtitle("Number of Students Tested By Year/Race")+
+    facet_grid(SY ~ 
+                 factor(case_when(Ethnicity=='Hispanic'~ 'Hispanic',Ethnicity=='Islander'~'Islander', TRUE~'Other')),
+               switch="both",scales="free",space="fixed")
+
+```
+
+In order to properly reflect on progress moving students to proficiency, it is important to consider 
+students who tested in both years, and what change they experienced over that time period.
+
+\newpage
+
+## The ELPA21 "Flow" Chart
+
+```{r FlowChart,message=FALSE}
+elpa.plot.flow(elpadata,2021,2022,incN=TRUE,labelflow=TRUE)
+```
+
+\newpage
+
+## The ELPA Dataset
+
+The project expects a data set with the the following variables:
+
+- Student.ID\
+A linking ID for the student records, across years.  The value is not displayed in any charts.
+In Arkansas, the "triand"/"state testing id" for the student is used.  Stored as a character string
+- Enrolled.Grade\
+The enrolled grade from the ELPA file\
+Levels: "KG","01","02","03"..."12"
+- School\
+The enrolled school from the ELPA file, as a string.  The values should be the same for all years.  A helper function
+is included that strips non-alphabetic characters from the string.
+- Ethnicity\
+The Ethnicity as reported in the ELPA file, as a string.  Values should be the same for all years.  A helper function
+is included to convert several common ethnicity descriptions into a standardized form.
+- Scale.Score\
+The overall summative scaled score, stored as an integer
+- Performance.Level\
+The overall summative performance level, stored as a string.\
+Levels: "Emerging","Progressing","Proficient"
+- SY\
+The school year, in form "2022"
+Levels: c("2020","2021","2022")
+
+

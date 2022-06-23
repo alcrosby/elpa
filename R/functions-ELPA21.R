@@ -691,10 +691,10 @@ elpa.plot.flow<-function(df,y1,y2,adjustExit=FALSE,incN=FALSE,nsep='\n',
                                       paste("Emerging in",y1),paste("Kindergartner in",y2),
                                       paste("New to",unit,"in",y2)))),
       hablar::fct(.data$EndY2,.args=list(ordered=TRUE,
-                           levels=c(paste("Graduated in",y1),
+                           levels=c(paste("Exited Services in",y2),
                                     paste("Proficient in",y2),paste("Progressing in",y2),
                                     paste("Emerging in",y2),
-                                    paste("Exited Services in",y2),
+                                    paste("Graduated in",y1),
                                     paste("Left",unit,"in",y2))))
     )
 
