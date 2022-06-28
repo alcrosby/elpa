@@ -166,6 +166,41 @@ helper.reducedata<-function(ds,SY=2022){
     mutate(SY=SY)
 }
 
+#' Shift factorial by N levels
+#'
+#' Function
+#'
+#' @param x A vector of factors to be shifted
+#' @param increment The number of levels to shift by applying function .fun (defaults to add)
+#' @param cap If true, return first element if factor level shifted below first level
+#' or last level if shifted above last level; otherwise return NA if level shifts out
+#' of bounds
+#' @param wrap UNIMPLEMENTED, if TRUE, wrap values around when shifting out of bounds;
+#' ie. next level of last level is first level.
+#' @param .fun Function to apply when shifting levels.  Default is `+` to increment to
+#' next level, `-` will shift to previous level, other functions will work but may not
+#' be meaningful
+#'
+#' @return
+#' @export
+#'
+#' @examples
+fct_shift_ord <- function(x, increment = 1, cap = TRUE,wrap=FALSE, .fun = `+`){
+  x_nlevel <- nlevels(x)
+  x_lables <- levels(x)
+
+  # apply function .fun to the numeric of the ordered vector
+  erg <-.fun(as.numeric(x), increment)
+
+
+  # cap to 1 and x_nlevel if the increment was larger than the original range of the factor levels
+  if (cap) {
+    erg[erg<1] <- 1
+    erg[erg>x_nlevel] <- x_nlevel
+  }
+  ordered(round(erg), levels = 1:x_nlevel, labels = x_lables)
+}
+
 #' Function to clean elpa dataset
 #'
 #' Performs several standardized housekeeping tasks to a 'standard' ELPA dataset.
