@@ -79,9 +79,9 @@ findnewestfile <- function( pattern, read.data=TRUE, path=NULL,...) {
 #'
 #' @param elpafiledirectory The path to the location where the ELPA21 files have been expanded.
 #'
-#' @note This helper package assumes that there are 13 grades for your district - K through 12.
-#' For districts/schools with fewer grades, errors may result.  The tool needs testing to see if
-#' it can be made to work correctly with a partial dataset.
+#' @note The tool expects files with names as downloaded from the ELPA21 Portal.  The files
+#' should all be of type CSV.  The naming convention should be <School>_<TestName>_<FileType>_<Date>.CSV
+#' where <TestName> includes the grade level in  the format "Kindergarten" or "Grade1" through "Grade12".
 #'
 #' @return ELPA Dataset data.frame
 #'
@@ -113,7 +113,7 @@ readelpascores<-function(elpafiledirectory = "C:/Users/acrosby/Downloads/ELPASpr
 
   # Fix column names in the other files, and create a single "merged" dataset for the entire district...
   merged<-NULL
-  for (g in names(workfiles)[1:13]) {
+  for (g in names(workfiles)) {
     workfiles[[g]][["data"]]<-select(workfiles[[g]][["data"]],-.data$X)
     names(workfiles[[g]][["data"]])[1]<-c("Student.Name")
     names(workfiles[[g]][["data"]])[14:18]<-c("Summative.ScaleScore","Summative.ScaleScore.Standard.Error",
@@ -986,6 +986,7 @@ elpa.plot.proflevel.byyears<-function(ds,SY.labels=NULL,SY.labels.size=10,move.s
                    axis.ticks.x=ggplot2::element_blank(),
                    axis.text.x=ggplot2::element_text(size=SY.labels.size)
     )+
-    ggplot2::scale_fill_manual(values=c('darkgreen','khaki','salmon'))
+    ggplot2::scale_fill_manual(values=c('darkgreen','khaki','salmon'))+
+    ggplot2::xlab("")+ggplot2::ylab("")
   plt
 }
