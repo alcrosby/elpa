@@ -14,7 +14,8 @@ Imports:
     scales,
     ggfittext,
     hablar,
-    rlang
+    rlang,
+    data.table
 RoxygenNote: 7.2.0
 Depends: 
     R (>= 2.10),

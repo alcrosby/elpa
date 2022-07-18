@@ -1,6 +1,7 @@
 #' @importFrom dplyr %>% case_when bind_rows select
 #' @importFrom rlang .data :=
 #' @importFrom ggalluvial geom_alluvium
+#' @importFrom data.table shift
 NULL
 #> NULL
 
@@ -181,10 +182,9 @@ helper.reducedata<-function(ds,SY=2022){
 #' next level, `-` will shift to previous level, other functions will work but may not
 #' be meaningful
 #'
-#' @return
+#' @return The shifted value
 #' @export
 #'
-#' @examples
 fct_shift_ord <- function(x, increment = 1, cap = TRUE,wrap=FALSE, .fun = `+`){
   x_nlevel <- nlevels(x)
   x_lables <- levels(x)
@@ -921,3 +921,71 @@ helper.buildelpadata<-function() {
     helper.deidentify(idvar=.data$Student.ID)
 }
 
+
+#' Plot Proficiency Change Across Years
+#'
+#' This plot creates a series of columns for proficiency by years, labelled with counts and
+#' pecentages on each column, and the space between columns labelled with the percentage
+#' change in distribution from year 1 to year 2.
+#'
+#' @param ds A valid ELPA dataset
+#' @param SY.labels The labels for the school years on the X axis
+#' @param SY.labels.size The size for the X axis labels
+#' @param move.size The max size for the "movement" labels placed between the columns
+#'
+#' @return ggplot2 grob
+#' @export
+#'
+elpa.plot.proflevel.byyears<-function(ds,SY.labels=NULL,SY.labels.size=10,move.size=10) {
+  if (is.null(SY.labels)) SY.labels=paste(unique(ds$SY),"\nLevel")
+  nsy<-length(unique(ds$SY))
+  tmp <-ds %>% dplyr::arrange(.data$SY) %>%
+    hablar::convert(
+      hablar::fct(.data$Performance.Level,.args=list(ordered=T,levels=c("Proficient","Progressing","Emerging")))
+    )
+  plt <- tmp%>%
+    ggplot2::ggplot(ggplot2::aes(x=.data$SY, fill=factor(.data$Performance.Level),ymin=0,ymax=1))+
+    ggplot2::geom_area(ggplot2::aes(group=.data$Performance.Level),alpha=0.25,stat='count',position='fill') +
+    ggplot2::geom_bar(position="fill",width=.5,stat="count")+
+    ggfittext::geom_fit_text(
+      ggplot2::aes(label = paste(ggplot2::after_stat(.data$fill),
+                        ggplot2::after_stat(.data$count),
+                        ggplot2::after_stat(unlist(tapply(.data$count, list(.data$x, .data$PANEL),
+                                                 function(a) scales::label_percent(accuracy=.1)(a/sum(a))))),' ',
+                        sep='\n'),
+          y = ggplot2::after_stat(.data$count) ), stat = "count",
+      position = ggplot2::position_fill(vjust = .5),
+      width=.5,
+      min.size = .75,
+      contrast=TRUE
+    )+ggfittext::geom_fit_text(
+      ggplot2::aes(x=0.5+as.integer(factor(.data$SY)),label = ggplot2::after_stat(ifelse((.data$x==(max(.data$x))),
+                                                                 '',
+                                                                 paste(
+                                                                   ifelse(
+                                                                     (.data$count/mapply(function(a,b) sum(.data$count[which(.data$x==a & .data$PANEL==b)]), .data$x,.data$PANEL)) >
+                                                                       (data.table::shift(.data$count,n=1,type='lead')/mapply(function(a,b) sum(.data$count[which(.data$x==(a+1) & .data$PANEL==b)]), .data$x,.data$PANEL)),
+                                                                     'DOWN','UP'
+                                                                   ),
+                                                                   scales::label_percent(accuracy=.1)
+                                                                   (abs(1-(
+                                                                     (data.table::shift(.data$count,n=1,type='lead')/mapply(function(a,b) sum(.data$count[which(.data$x==(a+1) & .data$PANEL==b)]), .data$x,.data$PANEL))/
+                                                                       (.data$count/mapply(function(a,b) sum(.data$count[which(.data$x==a & .data$PANEL==b)]), .data$x,.data$PANEL))
+                                                                   ))),
+                                                                   sep='\n'))),
+          y = ggplot2::after_stat(.data$count) ), stat = "count",
+      position='fill',
+      size=9,
+      width=.65,
+      min.size = .75,
+      contrast=FALSE
+    )+
+    ggplot2::theme(legend.position="none",
+                   axis.text.y=ggplot2::element_blank(),
+                   axis.ticks.y=ggplot2::element_blank(),
+                   axis.ticks.x=ggplot2::element_blank(),
+                   axis.text.x=ggplot2::element_text(size=SY.labels.size)
+    )+
+    ggplot2::scale_fill_manual(values=c('darkgreen','khaki','salmon'))
+  plt
+}

@@ -18,7 +18,7 @@ knitr::opts_chunk$set(echo = FALSE,fig.align="center")
 
 ```{r load-data, message=FALSE}
 library(elpa)
-library(tidyverse)
+library(dplyr)
 library(ggplot2)
 library(ggalluvial)
 
