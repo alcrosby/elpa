@@ -2,6 +2,7 @@
 #' @importFrom rlang .data :=
 #' @importFrom ggalluvial geom_alluvium
 #' @importFrom data.table shift
+#' @importFrom "utils" "read.csv"
 NULL
 #> NULL
 
@@ -58,20 +59,6 @@ findnewestfile <- function( pattern, read.data=TRUE, path=NULL,...) {
   return(rc)
 }
 
-######################################################
-# FUNCTION readelpascores
-#   elpafiledirectory
-#     location where the files for a single year's ELPA
-#     results are located.  Should be the unzipped files
-#     from the ELPA portal's CSV exports, one for "all"
-#     and one with the scores per grade across the
-#     district.
-######################################################
-# RETURNS
-#   a data.table of ELPA scores
-######################################################
-# NOTES:
-######################################################
 #' Reads a directory of ELPA scores
 #'
 #' Reads the contents of a directory where the ELPA21 scores from the file portal have been expanded.
@@ -125,6 +112,42 @@ readelpascores<-function(elpafiledirectory = "C:/Users/acrosby/Downloads/ELPASpr
   merged
 }
 
+
+#' Read ALL ELPA21 CSV files in a directory
+#'
+#' This funciton simply reads all of the CSV files in a directory and assumes that they
+#' are downloaded from the ELPA21 portal, and that the format of the files has not changed
+#' from the 2022 school year.  The dataset should be processed through the helper.reducedata
+#' and helper.cleandata functions before using.
+#'
+#' In the ELPA21 Portal, you should select "Student Data File", Format "CSV" and Output
+#' "Data File for Each Test". It's best to select all of the tests, and all of the schools
+#' into a single set of files if you are working at the district level.
+#' After downloading the files, you should extract the ZIP
+#' files into a single directory and use this funciton to read the files into a dataset, and
+#' then process it through the two helper functions.
+#'
+#' @param elpafiledirectory The directory of ELPA21 CSV files
+#'
+#' @return data.frame containing all of the contents of the file
+#' @export
+#'
+readallelpascores<-function(elpafiledirectory = ".") {
+  fl <- list.files(path=elpafiledirectory,pattern='.*(csv)$',ignore.case=TRUE,full.names=TRUE)
+  print(paste("Reading",length(fl),"files..."))
+  merged <- NULL
+  for (f in fl) {
+    data<-utils::read.csv(f,colClasses="character")
+    names(data)[1]<-c("Student.Name")
+    names(data)[14:18]<-c("Summative.ScaleScore","Summative.ScaleScore.Standard.Error",
+                          "Summative.ComprehensionScaleScore","ComprehensionScaleScore.Standard.Error",
+                          "Summative.PerformanceLevel")
+    merged<-bind_rows(merged,data)
+  }
+  merged
+}
+
+
 #' Is the data set formatted as an ELPA data set?
 #'
 #' A simple helper function that just checks for valid variable names in the dataset.  Will error if there are any
@@ -151,20 +174,26 @@ helper.isvalidelpa<-function(ds=NULL) {
 #' \code{helper.isvalidelpa()} function.
 #'
 #' @param ds A dataset read by the \code{readelpadata()} function
-#' @param SY The School Year for the dataset
+#' @param SchoolYear (deprecated) Use the second word of the "Tested.Reason"
+#' column from the imported dataset.
 #'
 #' @return data frame formatted as ELPA data for this package
 #' @export
-helper.reducedata<-function(ds,SY=2022){
-  ds %>% dplyr::select(
-    Student.ID=.data$Student.ID,
-    Enrolled.Grade=.data$Enrolled.Grade,
-    School=.data$Enrolled.School,
-    Ethnicity=.data$Ethnicity,
-    Scale.Score=.data$Summative.ScaleScore,
-    Performance.Level=.data$Summative.PerformanceLevel
-  )%>%
-    mutate(SY=SY)
+helper.reducedata<-function(ds,SchoolYear=NULL) {
+  ds %>%
+    dplyr::filter(.data$Summative.PerformanceLevel != 'Not Attempted') %>%
+    dplyr::mutate(
+                  SY=stringr::word(.data$Test.Reason,2)
+                  ) %>%
+    dplyr::select(
+      SY=.data$SY,
+      Student.ID=.data$Student.ID,
+      Enrolled.Grade=.data$Enrolled.Grade,
+      School=.data$Enrolled.School,
+      Ethnicity=.data$Ethnicity,
+      Scale.Score=.data$Summative.ScaleScore,
+      Performance.Level=.data$Summative.PerformanceLevel
+  )
 }
 
 #' Shift factorial by N levels
@@ -911,10 +940,10 @@ helper.buildelpadata<-function() {
       dplyr::mutate(SY='2020')%>%
       helper.cleandata(),
     readelpascores("C:/Users/acrosby/Downloads/ELPA2021/")%>%
-      helper.reducedata(SY='2021') %>%
+      helper.reducedata(SchoolYear='2021') %>%
       helper.cleandata(),
     readelpascores("C:/Users/acrosby/Downloads/ELPASpring2022/") %>%
-      helper.reducedata(SY='2022') %>%
+      helper.reducedata(SchoolYear='2022') %>%
       helper.cleandata()
   ) %>%
     helper.deidentify(idvar=.data$School,prefix="School_") %>%
@@ -932,48 +961,57 @@ helper.buildelpadata<-function() {
 #' @param SY.labels The labels for the school years on the X axis
 #' @param SY.labels.size The size for the X axis labels
 #' @param move.size The max size for the "movement" labels placed between the columns
+#' @param move.labels The labels for "UP"/"DOWN" in the middle.
+#' @param ntested TRUE (default) include number of students tested on chart as part of X axis
+#' labels, will not work properly with faceted charts
+#' @param ntested.size The size for the N Tested label at the bottom of the chart
 #'
 #' @return ggplot2 grob
 #' @export
 #'
-elpa.plot.proflevel.byyears<-function(ds,SY.labels=NULL,SY.labels.size=10,move.size=10) {
+elpa.plot.proflevel.byyears<-function(ds,SY.labels=NULL,SY.labels.size=10,move.size=10,move.labels=NULL,ntested=TRUE,ntested.size=3) {
+  if (!ntested) ntested.size=0
   if (is.null(SY.labels)) SY.labels=paste(unique(ds$SY),"\nLevel")
+  if (is.null(move.labels)) move.labels=c("UP","DOWN")
+  if (length(move.labels)!=2) move.labels=c("UP","DOWN")
   nsy<-length(unique(ds$SY))
   tmp <-ds %>% dplyr::arrange(.data$SY) %>%
     hablar::convert(
       hablar::fct(.data$Performance.Level,.args=list(ordered=T,levels=c("Proficient","Progressing","Emerging")))
     )
   plt <- tmp%>%
-    ggplot2::ggplot(ggplot2::aes(x=.data$SY, fill=factor(.data$Performance.Level),ymin=0,ymax=1))+
-    ggplot2::geom_area(ggplot2::aes(group=.data$Performance.Level),alpha=0.25,stat='count',position='fill') +
-    ggplot2::geom_bar(position="fill",width=.5,stat="count")+
+    ggplot2::ggplot(ggplot2::aes(x=.data$SY, ymin=0,ymax=1))+
+    ggplot2::geom_area(ggplot2::aes(fill=factor(.data$Performance.Level),group=.data$Performance.Level),alpha=0.25,stat='count',position='fill') +
+    ggplot2::geom_bar(ggplot2::aes(fill=factor(.data$Performance.Level)),position="fill",width=.5,stat="count")+
     ggfittext::geom_fit_text(
-      ggplot2::aes(label = paste(ggplot2::after_stat(.data$fill),
-                        ggplot2::after_stat(.data$count),
-                        ggplot2::after_stat(unlist(tapply(.data$count, list(.data$x, .data$PANEL),
-                                                 function(a) scales::label_percent(accuracy=.1)(a/sum(a))))),' ',
-                        sep='\n'),
-          y = ggplot2::after_stat(.data$count) ), stat = "count",
+      ggplot2::aes(fill=factor(.data$Performance.Level),
+                   label = paste(ggplot2::after_stat(.data$fill),
+                                 scales::comma_format()(ggplot2::after_stat(.data$count)),
+                                 ggplot2::after_stat(unlist(tapply(.data$count, list(.data$x, .data$PANEL),
+                                                                   function(a) scales::label_percent(accuracy=.1)(a/sum(a))))),' ',
+                                 sep='\n'),
+                   y = ggplot2::after_stat(.data$count) ), stat = "count",
       position = ggplot2::position_fill(vjust = .5),
       width=.5,
       min.size = .75,
       contrast=TRUE
     )+ggfittext::geom_fit_text(
-      ggplot2::aes(x=0.5+as.integer(factor(.data$SY)),label = ggplot2::after_stat(ifelse((.data$x==(max(.data$x))),
-                                                                 '',
-                                                                 paste(
-                                                                   ifelse(
-                                                                     (.data$count/mapply(function(a,b) sum(.data$count[which(.data$x==a & .data$PANEL==b)]), .data$x,.data$PANEL)) >
-                                                                       (data.table::shift(.data$count,n=1,type='lead')/mapply(function(a,b) sum(.data$count[which(.data$x==(a+1) & .data$PANEL==b)]), .data$x,.data$PANEL)),
-                                                                     'DOWN','UP'
-                                                                   ),
-                                                                   scales::label_percent(accuracy=.1)
-                                                                   (abs(1-(
-                                                                     (data.table::shift(.data$count,n=1,type='lead')/mapply(function(a,b) sum(.data$count[which(.data$x==(a+1) & .data$PANEL==b)]), .data$x,.data$PANEL))/
-                                                                       (.data$count/mapply(function(a,b) sum(.data$count[which(.data$x==a & .data$PANEL==b)]), .data$x,.data$PANEL))
-                                                                   ))),
-                                                                   sep='\n'))),
-          y = ggplot2::after_stat(.data$count) ), stat = "count",
+      ggplot2::aes(fill=factor(.data$Performance.Level),
+                   x=0.5+as.integer(factor(.data$SY)),label = ggplot2::after_stat(ifelse((.data$x==(max(.data$x))),
+                                                                                         '',
+                                                                                         paste(
+                                                                                           ifelse(
+                                                                                             (.data$count/mapply(function(a,b) sum(.data$count[which(.data$x==a & .data$PANEL==b)]), .data$x,.data$PANEL)) >
+                                                                                               (data.table::shift(.data$count,n=1,type='lead')/mapply(function(a,b) sum(.data$count[which(.data$x==(a+1) & .data$PANEL==b)]), .data$x,.data$PANEL)),
+                                                                                             move.labels[2],move.labels[1]
+                                                                                           ),
+                                                                                           scales::label_percent(accuracy=.1)
+                                                                                           (abs(1-(
+                                                                                             (data.table::shift(.data$count,n=1,type='lead')/mapply(function(a,b) sum(.data$count[which(.data$x==(a+1) & .data$PANEL==b)]), .data$x,.data$PANEL))/
+                                                                                               (.data$count/mapply(function(a,b) sum(.data$count[which(.data$x==a & .data$PANEL==b)]), .data$x,.data$PANEL))
+                                                                                           ))),
+                                                                                           sep='\n'))),
+                   y = ggplot2::after_stat(.data$count) ), stat = "count",
       position='fill',
       size=9,
       width=.65,
@@ -987,6 +1025,15 @@ elpa.plot.proflevel.byyears<-function(ds,SY.labels=NULL,SY.labels.size=10,move.s
                    axis.text.x=ggplot2::element_text(size=SY.labels.size)
     )+
     ggplot2::scale_fill_manual(values=c('darkgreen','khaki','salmon'))+
-    ggplot2::xlab("")+ggplot2::ylab("")
+    ggplot2::xlab("")+ggplot2::ylab("")+
+    ggplot2::geom_text(
+      ggplot2::aes(
+        x=.data$SY,
+        label=ggplot2::after_stat(paste('N:',scales::comma_format()(.data$count)))
+      ),
+      position=ggplot2::position_fill(vjust=0),
+      size=ntested.size,
+      stat='count')
   plt
 }
+

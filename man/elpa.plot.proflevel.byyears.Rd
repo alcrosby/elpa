@@ -8,7 +8,10 @@ elpa.plot.proflevel.byyears(
   ds,
   SY.labels = NULL,
   SY.labels.size = 10,
-  move.size = 10
+  move.size = 10,
+  move.labels = NULL,
+  ntested = TRUE,
+  ntested.size = 3
 )
 }
 \arguments{
@@ -19,6 +22,13 @@ elpa.plot.proflevel.byyears(
 \item{SY.labels.size}{The size for the X axis labels}
 
 \item{move.size}{The max size for the "movement" labels placed between the columns}
+
+\item{move.labels}{The labels for "UP"/"DOWN" in the middle.}
+
+\item{ntested}{TRUE (default) include number of students tested on chart as part of X axis
+labels, will not work properly with faceted charts}
+
+\item{ntested.size}{The size for the N Tested label at the bottom of the chart}
 }
 \value{
 ggplot2 grob

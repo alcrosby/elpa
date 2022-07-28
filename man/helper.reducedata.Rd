@@ -4,12 +4,13 @@
 \alias{helper.reducedata}
 \title{Reduce ELPA dataset}
 \usage{
-helper.reducedata(ds, SY = 2022)
+helper.reducedata(ds, SchoolYear = NULL)
 }
 \arguments{
 \item{ds}{A dataset read by the \code{readelpadata()} function}
 
-\item{SY}{The School Year for the dataset}
+\item{SchoolYear}{(deprecated) Use the second word of the "Tested.Reason"
+column from the imported dataset.}
 }
 \value{
 data frame formatted as ELPA data for this package

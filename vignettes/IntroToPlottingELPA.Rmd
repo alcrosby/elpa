@@ -39,12 +39,12 @@ elpa2020<-read.csv(file="c:/users/acrosby/Documents/ELPA2021/elpaspring2020.csv"
 
 # Read the ELPA 2021 files downloaded and extracted into a specific folder 
 elpa2021<-readelpascores("C:/Users/acrosby/Downloads/ELPA2021/")%>%
-  helper.reducedata(SY='2021') %>%
+  helper.reducedata(SchoolYear='2021') %>%
     helper.cleandata()
 
 # Read the ELPA 2022 files downloaded and extracted into a specific folder 
 elpa2022<-readelpascores("C:/Users/acrosby/Downloads/ELPASpring2022/")%>%
-  helper.reducedata(SY='2021') %>%
+  helper.reducedata(SchoolYear='2021') %>%
   helper.cleandata()
 
 elpa.sdale<-bind_rows(elpa2020,elpa2021,elpa2022)

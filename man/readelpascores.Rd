@@ -19,7 +19,7 @@ Reads the contents of a directory where the ELPA21 scores from the file portal h
 User is expected to download the CSV files from the ELPA21 portal, and unzip them.
 }
 \note{
-This helper package assumes that there are 13 grades for your district - K through 12.
-For districts/schools with fewer grades, errors may result.  The tool needs testing to see if
-it can be made to work correctly with a partial dataset.
+The tool expects files with names as downloaded from the ELPA21 Portal.  The files
+should all be of type CSV.  The naming convention should be <School>_<TestName>_<FileType>_<Date>.CSV
+where <TestName> includes the grade level in  the format "Kindergarten" or "Grade1" through "Grade12".
 }
