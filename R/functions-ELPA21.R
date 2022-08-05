@@ -11,10 +11,6 @@ NULL
 # R functions for analyzing multiple years of
 # ELPA21 Scores
 #
-######################################################
-# Author: Albert Crosby (acrosby@sdale.org)
-# Last Update: 8 June 2022
-######################################################
 # Abstract:
 #   These are functions for analyzing ELPA data with R
 #   as used by Springdale Public Schools.
@@ -340,6 +336,7 @@ helper.schools.with.grade<-function(df,grade) {
 #' @param footnote A string of text that is positioned at the lower right corner of the page
 #' @param cornertext String to place in the top left corner of the page
 #' @param textbox A string to place as a textbox in the "middle" of the title page
+#' @param textbox.grow TRUE - grow the text in the textbox to fill the allowed space, default=FALSE
 #' @param title.face Font face for the title (plain, bold, italic, etc.)
 #' @param title.family Font family for the title
 #' @param title.reflow TRUE - allow the Title to be reflown across multiple lines
@@ -353,6 +350,7 @@ helper.schools.with.grade<-function(df,grade) {
 #' @importFrom ggplot2 ggplot theme_void
 #'
 helper.titlepage<-function(title="",subtitle="",author="",footnote="",cornertext="",textbox="",
+                           textbox.grow=FALSE,
                            title.face="bold",title.family="serif",title.reflow=TRUE,
                            subtitle.face="plain",subtitle.reflow=FALSE,
                            author.face="italic") {
@@ -361,7 +359,7 @@ helper.titlepage<-function(title="",subtitle="",author="",footnote="",cornertext
     ggfittext::geom_fit_text(size=50,ggplot2::aes(x=5,y=9,label=title,family=title.family,fontface=title.face),reflow=title.reflow,width=10,height=1)+
     ggfittext::geom_fit_text(size=25,ggplot2::aes(x=5,y=8,label=subtitle,fontface=subtitle.face),reflow=subtitle.reflow,width=9,height=.75)+
     ggfittext::geom_fit_text(size=15,ggplot2::aes(x=5,y=7.5,label=author,fontface=author.face),reflow=FALSE,width=4,height=.5)+
-    ggfittext::geom_fit_text(size=10,place="topleft",ggplot2::aes(x=5,y=3.75,label=textbox),reflow=TRUE,width=10,height=6,hjust=0,vjust=0)+
+    ggfittext::geom_fit_text(size=10,place="topleft",ggplot2::aes(x=5,y=3.75,label=textbox),reflow=TRUE,width=10,height=6,hjust=0,vjust=0,grow=textbox.grow)+
     ggfittext::geom_fit_text(place="topleft",ggplot2::aes(xmin=0,xmax=10,ymin=0,ymax=10,label=cornertext))+
     ggfittext::geom_fit_text(place="bottomright",ggplot2::aes(xmin=0,xmax=10,ymin=0,ymax=10,label=footnote))
 }

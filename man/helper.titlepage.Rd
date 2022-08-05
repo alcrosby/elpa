@@ -11,6 +11,7 @@ helper.titlepage(
   footnote = "",
   cornertext = "",
   textbox = "",
+  textbox.grow = FALSE,
   title.face = "bold",
   title.family = "serif",
   title.reflow = TRUE,
@@ -31,6 +32,8 @@ helper.titlepage(
 \item{cornertext}{String to place in the top left corner of the page}
 
 \item{textbox}{A string to place as a textbox in the "middle" of the title page}
+
+\item{textbox.grow}{TRUE - grow the text in the textbox to fill the allowed space, default=FALSE}
 
 \item{title.face}{Font face for the title (plain, bold, italic, etc.)}
 
