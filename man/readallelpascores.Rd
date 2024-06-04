@@ -13,7 +13,7 @@ readallelpascores(elpafiledirectory = ".")
 data.frame containing all of the contents of the file
 }
 \description{
-This funciton simply reads all of the CSV files in a directory and assumes that they
+This function simply reads all of the CSV files in a directory and assumes that they
 are downloaded from the ELPA21 portal, and that the format of the files has not changed
 from the 2022 school year.  The dataset should be processed through the helper.reducedata
 and helper.cleandata functions before using.
@@ -23,6 +23,6 @@ In the ELPA21 Portal, you should select "Student Data File", Format "CSV" and Ou
 "Data File for Each Test". It's best to select all of the tests, and all of the schools
 into a single set of files if you are working at the district level.
 After downloading the files, you should extract the ZIP
-files into a single directory and use this funciton to read the files into a dataset, and
+files into a single directory and use this function to read the files into a dataset, and
 then process it through the two helper functions.
 }

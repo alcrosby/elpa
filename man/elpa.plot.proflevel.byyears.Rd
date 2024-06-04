@@ -11,7 +11,8 @@ elpa.plot.proflevel.byyears(
   move.size = 10,
   move.labels = NULL,
   ntested = TRUE,
-  ntested.size = 3
+  ntested.size = 3,
+  ntested.vjust = 0
 )
 }
 \arguments{
@@ -29,6 +30,10 @@ elpa.plot.proflevel.byyears(
 labels, will not work properly with faceted charts}
 
 \item{ntested.size}{The size for the N Tested label at the bottom of the chart}
+
+\item{ntested.vjust}{The vjust for the N Tested label.  0 (default) leaves
+the value at the bottom of the chart; 1 places it at the top; other values
+are allowed.}
 }
 \value{
 ggplot2 grob
@@ -37,4 +42,7 @@ ggplot2 grob
 This plot creates a series of columns for proficiency by years, labelled with counts and
 pecentages on each column, and the space between columns labelled with the percentage
 change in distribution from year 1 to year 2.
+}
+\note{
+The labelled values are incorrect if facetted.  This may be fixed in a later revision.   Or at least hide them if facets are enabled until I figure out how to make things work right...
 }

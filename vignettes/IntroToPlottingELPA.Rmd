@@ -21,37 +21,38 @@ library(elpa)
 library(dplyr)
 library(ggplot2)
 library(ggalluvial)
+library(rmarkdown)
 
 # Reading the ELPA data for 2020 from a CSV file:
 
-elpa2020<-read.csv(file="c:/users/acrosby/Documents/ELPA2021/elpaspring2020.csv") %>%
+#elpa2020<-read.csv(file="c:/users/acrosby/Documents/ELPA2021/elpaspring2020.csv") %>%
 # Pick the needed fields from the CSV and give expected names
-  select(
-    Student.ID=StudentID,
-    Enrolled.Grade=EnrolledGrade,
-    School=EnrolledSchool,
-    Ethnicity=Ethnicity,
-    Scale.Score=ELPA21SummativeScaleScore,
-    Performance.Level=ELPA21SummativePerformanceLevel
-  )%>%
-  mutate(SY='2020')%>%
-  helper.cleandata()
+  # select(
+  #   Student.ID=StudentID,
+  #   Enrolled.Grade=EnrolledGrade,
+  #   School=EnrolledSchool,
+  #   Ethnicity=Ethnicity,
+  #   Scale.Score=ELPA21SummativeScaleScore,
+  #   Performance.Level=ELPA21SummativePerformanceLevel
+  # )%>%
+  # mutate(SY='2020')%>%
+  # helper.cleandata()
 
 # Read the ELPA 2021 files downloaded and extracted into a specific folder 
-elpa2021<-readelpascores("C:/Users/acrosby/Downloads/ELPA2021/")%>%
-  helper.reducedata(SchoolYear='2021') %>%
-    helper.cleandata()
+# elpa2021<-readelpascores("C:/Users/acrosby/Downloads/ELPA2021/")%>%
+#   helper.reducedata(SchoolYear='2021') %>%
+#     helper.cleandata()
 
 # Read the ELPA 2022 files downloaded and extracted into a specific folder 
-elpa2022<-readelpascores("C:/Users/acrosby/Downloads/ELPASpring2022/")%>%
-  helper.reducedata(SchoolYear='2021') %>%
-  helper.cleandata()
-
-elpa.sdale<-bind_rows(elpa2020,elpa2021,elpa2022)
+# elpa2022<-readelpascores("C:/Users/acrosby/Downloads/ELPASpring2022/")%>%
+#   helper.reducedata(SchoolYear='2021') %>%
+#   helper.cleandata()
+# 
+# elpa.sdale<-bind_rows(elpa2020,elpa2021,elpa2022)
 
 ######################################################
 # Combine the dataset(s) from above into a data.table
-# named elpadata
+# named elpadata - that could/should be loaded already?
 ######################################################
 
 ```
@@ -63,7 +64,7 @@ and other issues.
 IT IS NOT COMPLETE AT THIS TIME AND IS DEFINITELY A WORK IN PROGRESS.  IT IS INCLUDED
 PARTIALLY AS A PLACEHOLDER, AND A WAY TO DEMONSTRATE AT LEAST SOME OF THE FUNCTIONS.
 
-The charts do not look at all similiar to what they appear in the original document.  If
+The charts do not look at all similar to what they appear in the original document.  If
 I can figure out how to simply load the PDF as a vignette with the R package, that's 
 what I will do...
 
@@ -75,7 +76,7 @@ document, and the charts and tables it includes, was created using the R program
 also serve as the vignette (introductory document) for the elpa21 package that will be available for you to install 
 and use.
 
-In this guide, we'll be using ELPA21 assessment results for Springdale Public Schools in Springdale, Arkanas
+In this guide, we'll be using ELPA21 assessment results for Springdale Public Schools in Springdale, Arkansas
 for three administrations of the test:
 
 * Spring 2020, in the 2019-2020 School Year

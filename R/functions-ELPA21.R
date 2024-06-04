@@ -69,13 +69,13 @@ findnewestfile <- function( pattern, read.data=TRUE, path=NULL,...) {
 #' @return ELPA Dataset data.frame
 #'
 #' @export
-readelpascores<-function(elpafiledirectory = "C:/Users/acrosby/Downloads/ELPASpring2022/") {
+readelpascores<-function(elpafiledirectory = "./") {
   # Find and read in all of the individual files, including the "all combined" file.
 
   # Note: There is no district name supplied so this code could be shared with others...
 
   workfiles<-NULL
-#  workfiles[["ALL"]] <- findnewestfile(".*(ACO-WAN).*(csv)$",path=elpafiledirectory,colClasses="character")
+
   workfiles[["K"]] <- findnewestfile(".*(KindergartenELPA).*(Summative).*(csv)$",path=elpafiledirectory,colClasses="character")
   workfiles[["G01"]] <- findnewestfile(".*(Grade1ELPA).*(Summative).*(csv)$",path=elpafiledirectory,colClasses="character")
   workfiles[["G02"]] <- findnewestfile(".*(Grade2ELPA).*(Summative).*(csv)$",path=elpafiledirectory,colClasses="character")
@@ -97,7 +97,10 @@ readelpascores<-function(elpafiledirectory = "C:/Users/acrosby/Downloads/ELPASpr
   # Fix column names in the other files, and create a single "merged" dataset for the entire district...
   merged<-NULL
   for (g in names(workfiles)) {
-    workfiles[[g]][["data"]]<-select(workfiles[[g]][["data"]],-.data$X)
+    # workfiles[[g]][["data"]]<-select(workfiles[[g]][["data"]],-.data$X)
+    # The 2023 data set added an extra column.  This drops it as well as the
+    # last column created by a trailing comma in the ELPA21 CSV files.
+    workfiles[[g]][["data"]]<-workfiles[[g]][["data"]][,c(1:13,(ncol(workfiles[[g]][["data"]])-17):(ncol(workfiles[[g]][["data"]])-1))]
     names(workfiles[[g]][["data"]])[1]<-c("Student.Name")
     names(workfiles[[g]][["data"]])[14:18]<-c("Summative.ScaleScore","Summative.ScaleScore.Standard.Error",
                                               "Summative.ComprehensionScaleScore","ComprehensionScaleScore.Standard.Error",
@@ -111,7 +114,7 @@ readelpascores<-function(elpafiledirectory = "C:/Users/acrosby/Downloads/ELPASpr
 
 #' Read ALL ELPA21 CSV files in a directory
 #'
-#' This funciton simply reads all of the CSV files in a directory and assumes that they
+#' This function simply reads all of the CSV files in a directory and assumes that they
 #' are downloaded from the ELPA21 portal, and that the format of the files has not changed
 #' from the 2022 school year.  The dataset should be processed through the helper.reducedata
 #' and helper.cleandata functions before using.
@@ -120,7 +123,7 @@ readelpascores<-function(elpafiledirectory = "C:/Users/acrosby/Downloads/ELPASpr
 #' "Data File for Each Test". It's best to select all of the tests, and all of the schools
 #' into a single set of files if you are working at the district level.
 #' After downloading the files, you should extract the ZIP
-#' files into a single directory and use this funciton to read the files into a dataset, and
+#' files into a single directory and use this function to read the files into a dataset, and
 #' then process it through the two helper functions.
 #'
 #' @param elpafiledirectory The directory of ELPA21 CSV files
@@ -155,7 +158,8 @@ readallelpascores<-function(elpafiledirectory = ".") {
 #' @return TRUE or FALSE
 #' @export
 helper.isvalidelpa<-function(ds=NULL) {
-  case_when(
+  if (is.null(ds) ) FALSE
+  else case_when(
     is.null(ds) ~ FALSE,
     is.null(names(ds)) ~ FALSE,
     all(names(ds) %in% c("Student.ID","Enrolled.Grade","School","Ethnicity","Scale.Score","Performance.Level","SY")) &
@@ -708,6 +712,12 @@ elpa.plot.profchange.bylevel.stacked<-function(ds,y1,y2){
 #' @param unit Name of the unit.  Suggestions:  District (default), School, State
 #' @param flow.toright TRUE Colors flows from Left to Right, highlighting movement from left to right, highlighting
 #' movement from the Starting Year to the Ending Year.  FALSE reverses the color highlighting.
+#' @param titles TRUE (default) include titles; FALSE suppress titles and captions
+#' @param flow.colors Supplies a list of colors for the flows.  One color for each of:
+#' "New in y2", "Exited Services in y2", "Graduated in y1", "Left in y2",
+#' "Kindergartner in y2", "Proficient in y1", "Proficient in y2", "Progressing in y1",
+#' "Progressing in y2", "Emerging in y1", "Emerging in y2"
+#' @param stratum.color Color for the stratum bars
 #' @return ELPA Flow Plot (ggplot object)
 #' @note This package uses ONLY information available in the ELPA data set.\cr
 #' A student is considered "New" if they only tested in the second year.\cr
@@ -724,7 +734,10 @@ elpa.plot.profchange.bylevel.stacked<-function(ds,y1,y2){
 #' @export
 elpa.plot.flow<-function(df,y1,y2,adjustExit=FALSE,incN=FALSE,nsep='\n',
                          labelflow=FALSE,unit='District',
-                         flow.toright=TRUE) {
+                         flow.toright=TRUE,
+                         titles=TRUE,
+                         flow.colors=c("brown","gold","deeppink4","burlywood3","hotpink","darkgreen","darkgreen","blue","blue","red","red"),
+                         stratum.color="lightblue") {
   elpadata.both<-dplyr::full_join(
     dplyr::filter(df,.data$SY==y1),
     dplyr::filter(df,.data$SY==y2),
@@ -748,16 +761,29 @@ elpa.plot.flow<-function(df,y1,y2,adjustExit=FALSE,incN=FALSE,nsep='\n',
       freq=dplyr::n()
     ) %>%
     hablar::convert(
-      hablar::fct(.data$StartY1,.args=list(ordered=TRUE,
-                             levels=c(paste("Proficient in",y1),paste("Progressing in",y1),
-                                      paste("Emerging in",y1),paste("Kindergartner in",y2),
-                                      paste("New to",unit,"in",y2)))),
-      hablar::fct(.data$EndY2,.args=list(ordered=TRUE,
-                           levels=c(paste("Exited Services in",y2),
-                                    paste("Proficient in",y2),paste("Progressing in",y2),
-                                    paste("Emerging in",y2),
-                                    paste("Graduated in",y1),
-                                    paste("Left",unit,"in",y2))))
+      hablar::fct(.data$StartY1,.data$EndY2,.args=list(ordered=TRUE,
+                             levels=c(paste("New to",unit,"in",y2),
+                                      paste("Exited Services in",y2),
+                                      paste("Graduated in",y1),
+                                      paste("Left",unit,"in",y2),
+                                      paste("Kindergartner in",y2),
+                                      paste("Proficient in",y1),
+                                      paste("Proficient in",y2),
+                                      paste("Progressing in",y1),
+                                      paste("Progressing in",y2),
+                                      paste("Emerging in",y1),
+                                      paste("Emerging in",y2)
+                                      )
+                             ))#,
+      #hablar::fct(.data$EndY2,.args=list(ordered=TRUE,
+       #                    levels=c(paste("Exited Services in",y2),
+        #                            paste("Graduated in",y1),
+         #                           paste("Left",unit,"in",y2),
+          #                          paste("Proficient in",y2),
+           #                         paste("Progressing in",y2),
+            #                        paste("Emerging in",y2)
+             #                       )
+              #             ))
     )
 
   if (adjustExit){
@@ -772,17 +798,17 @@ elpa.plot.flow<-function(df,y1,y2,adjustExit=FALSE,incN=FALSE,nsep='\n',
   else tmp<-tmp+ggalluvial::geom_alluvium(ggplot2::aes(fill=.data$EndY2))
 
   tmp<-tmp+
-    ggalluvial::geom_stratum(fill="lightblue")+
+    ggalluvial::geom_stratum(fill=stratum.color,na.rm=FALSE)+
     ggplot2::scale_x_discrete(limits = c("Survey", "Response"),
                      expand = c(0.15, 0.05)) +
     ggplot2::theme_void()+
     ggplot2::theme(legend.position="none")+
-    ggplot2::scale_fill_manual(values=c("blue","gold","red","green","turquoise4","salmon"),drop=FALSE) +
-    ggplot2::labs(title=paste("ELPA21 Students Tested in Either",y1,"and",y2))+
-    ggplot2::labs(caption="Note: Report is based solely on information received directly from the ELPA21 Portal.")
+    ggplot2::scale_fill_manual(values=flow.colors,drop=FALSE)
+  if (titles) tmp<-tmp+ggplot2::labs(title=paste("ELPA21 Students Tested in",y1,"and/or",y2),
+                  caption="Note: Report is based solely on information received directly from the ELPA21 Portal.")
 
   if (incN) {
-    tmp<-tmp+ggfittext::geom_fit_text(widt=1/3,stat="stratum",min.size=2,ggplot2::aes(label=paste(ggplot2::after_stat(.data$stratum),
+    tmp<-tmp+ggfittext::geom_fit_text(width=1/3,reflow=TRUE,stat="stratum",min.size=2,ggplot2::aes(label=paste(ggplot2::after_stat(.data$stratum),
                                                                    nsep,'(',ggplot2::after_stat(.data$count),')',
                                                                    sep='')
                                                                   )
@@ -963,11 +989,17 @@ helper.buildelpadata<-function() {
 #' @param ntested TRUE (default) include number of students tested on chart as part of X axis
 #' labels, will not work properly with faceted charts
 #' @param ntested.size The size for the N Tested label at the bottom of the chart
+#' @param ntested.vjust The vjust for the N Tested label.  0 (default) leaves
+#' the value at the bottom of the chart; 1 places it at the top; other values
+#' are allowed.
 #'
 #' @return ggplot2 grob
+#'
+#' @note The labelled values are incorrect if facetted.  This may be fixed in a later revision.   Or at least hide them if facets are enabled until I figure out how to make things work right...
+#'
 #' @export
 #'
-elpa.plot.proflevel.byyears<-function(ds,SY.labels=NULL,SY.labels.size=10,move.size=10,move.labels=NULL,ntested=TRUE,ntested.size=3) {
+elpa.plot.proflevel.byyears<-function(ds,SY.labels=NULL,SY.labels.size=10,move.size=10,move.labels=NULL,ntested=TRUE,ntested.size=3,ntested.vjust=0) {
   if (!ntested) ntested.size=0
   if (is.null(SY.labels)) SY.labels=paste(unique(ds$SY),"\nLevel")
   if (is.null(move.labels)) move.labels=c("UP","DOWN")
@@ -983,13 +1015,13 @@ elpa.plot.proflevel.byyears<-function(ds,SY.labels=NULL,SY.labels.size=10,move.s
     ggplot2::geom_bar(ggplot2::aes(fill=factor(.data$Performance.Level)),position="fill",width=.5,stat="count")+
     ggfittext::geom_fit_text(
       ggplot2::aes(fill=factor(.data$Performance.Level),
-                   label = paste(ggplot2::after_stat(.data$fill),
-                                 scales::comma_format()(ggplot2::after_stat(.data$count)),
-                                 ggplot2::after_stat(unlist(tapply(.data$count, list(.data$x, .data$PANEL),
-                                                                   function(a) scales::label_percent(accuracy=.1)(a/sum(a))))),' ',
-                                 sep='\n'),
+                   label = paste(ggplot2::after_stat(.data$fill),'\n',
+                                 scales::comma_format()(ggplot2::after_stat(.data$count)),' (',
+                                 ggplot2::after_stat(as.vector(matrix(unlist(tapply(count,list(x,PANEL),function(a) scales::label_percent(accuracy=.1)(a/sum(a)))),nrow=2,byrow=TRUE))),')',
+                                 sep=''),
                    y = ggplot2::after_stat(.data$count) ), stat = "count",
       position = ggplot2::position_fill(vjust = .5),
+      reflow=TRUE,
       width=.5,
       min.size = .75,
       contrast=TRUE
@@ -1029,7 +1061,7 @@ elpa.plot.proflevel.byyears<-function(ds,SY.labels=NULL,SY.labels.size=10,move.s
         x=.data$SY,
         label=ggplot2::after_stat(paste('N:',scales::comma_format()(.data$count)))
       ),
-      position=ggplot2::position_fill(vjust=0),
+      position=ggplot2::position_fill(vjust=ntested.vjust),
       size=ntested.size,
       stat='count')
   plt

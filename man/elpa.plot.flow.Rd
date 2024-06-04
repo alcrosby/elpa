@@ -13,7 +13,11 @@ elpa.plot.flow(
   nsep = "\\n",
   labelflow = FALSE,
   unit = "District",
-  flow.toright = TRUE
+  flow.toright = TRUE,
+  titles = TRUE,
+  flow.colors = c("brown", "gold", "deeppink4", "burlywood3", "hotpink", "darkgreen",
+    "darkgreen", "blue", "blue", "red", "red"),
+  stratum.color = "lightblue"
 )
 }
 \arguments{
@@ -36,6 +40,15 @@ the district without exiting.}
 
 \item{flow.toright}{TRUE Colors flows from Left to Right, highlighting movement from left to right, highlighting
 movement from the Starting Year to the Ending Year.  FALSE reverses the color highlighting.}
+
+\item{titles}{TRUE (default) include titles; FALSE suppress titles and captions}
+
+\item{flow.colors}{Supplies a list of colors for the flows.  One color for each of:
+"New in y2", "Exited Services in y2", "Graduated in y1", "Left in y2",
+"Kindergartner in y2", "Proficient in y1", "Proficient in y2", "Progressing in y1",
+"Progressing in y2", "Emerging in y1", "Emerging in y2"}
+
+\item{stratum.color}{Color for the stratum bars}
 }
 \value{
 ELPA Flow Plot (ggplot object)

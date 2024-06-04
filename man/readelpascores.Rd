@@ -4,9 +4,7 @@
 \alias{readelpascores}
 \title{Reads a directory of ELPA scores}
 \usage{
-readelpascores(
-  elpafiledirectory = "C:/Users/acrosby/Downloads/ELPASpring2022/"
-)
+readelpascores(elpafiledirectory = "./")
 }
 \arguments{
 \item{elpafiledirectory}{The path to the location where the ELPA21 files have been expanded.}
