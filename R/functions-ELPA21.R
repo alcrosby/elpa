@@ -137,10 +137,11 @@ readallelpascores<-function(elpafiledirectory = ".") {
   merged <- NULL
   for (f in fl) {
     data<-utils::read.csv(f,colClasses="character")
-    names(data)[1]<-c("Student.Name")
-    names(data)[14:18]<-c("Summative.ScaleScore","Summative.ScaleScore.Standard.Error",
-                          "Summative.ComprehensionScaleScore","ComprehensionScaleScore.Standard.Error",
-                          "Summative.PerformanceLevel")
+    names(data)<-str_replace(str_replace(names(data,".*Summative ",""))," ",".")
+#    names(data)[1]<-c("Student.Name")
+#    names(data)[14:18]<-c("Summative.ScaleScore","Summative.ScaleScore.Standard.Error",
+#                          "Summative.Comprehension.ScaleScore","Comprehension.ScaleScore.Standard.Error",
+#                          "Summative.PerformanceLevel")
     merged<-bind_rows(merged,data)
   }
   merged
