@@ -75,7 +75,7 @@ readelpascores<-function(elpafiledirectory = "./") {
 
   # Note: There is no district name supplied so this code could be shared with others...
 
-  if (!dir.exists(elpafiledirectory)) stop(paste("Could not find ELPA files directory: ",eplafiledirectory))
+  if (!dir.exists(elpafiledirectory)) stop(paste("Could not find ELPA files directory: ",elpafiledirectory))
 
   workfiles<-NULL
 
