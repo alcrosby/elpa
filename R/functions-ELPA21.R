@@ -90,21 +90,14 @@ readelpascores<-function(elpafiledirectory = "./") {
   workfiles[["G11"]] <- findnewestfile(".*(Grade11ELPA).*(Summative).*(csv)$",path=elpafiledirectory,colClasses="character")
   workfiles[["G12"]] <- findnewestfile(".*(Grade12ELPA).*(Summative).*(csv)$",path=elpafiledirectory,colClasses="character")
 
-  # Fix column names in the other files, and create a single "merged" dataset for the entire district...
+  # Fix column names and create a single "merged" dataset for the entire district...  Expects fields to have names like "Grade 10 ELPA21 Summative Overall Composite Scaled Score Standard Error"
   merged<-NULL
   for (g in names(workfiles)) {
-    # # workfiles[[g]][["data"]]<-select(workfiles[[g]][["data"]],-.data$X)
-    # # The 2023 data set added an extra column.  This drops it as well as the
-    # # last column created by a trailing comma in the ELPA21 CSV files.
-    # workfiles[[g]][["data"]]<-workfiles[[g]][["data"]][,c(1:13,(ncol(workfiles[[g]][["data"]])-17):(ncol(workfiles[[g]][["data"]])-1))]
-    # names(workfiles[[g]][["data"]])[1]<-c("Student.Name")
-    # names(workfiles[[g]][["data"]])[14:18]<-c("Summative.ScaleScore","Summative.ScaleScore.Standard.Error",
-    #                                           "Summative.ComprehensionScaleScore","ComprehensionScaleScore.Standard.Error",
-    #                                           "Summative.PerformanceLevel")
-    names(workfiles[[g]][["data"]])<-str_replace(str_replace(names(workfiles[[g]][["data"]]),".*Summative\\.","")," ",".")
-    merged<-bind_rows(merged,workfiles[[g]][["data"]])
+    if (!is.null(workfiles[[g]])) {
+      names(workfiles[[g]][["data"]])<-str_replace(str_replace(names(workfiles[[g]][["data"]]),".*Summative\\.","")," ",".")
+      merged<-bind_rows(merged,workfiles[[g]][["data"]])
+    }
   }
-
   merged
 }
 
@@ -135,10 +128,6 @@ readallelpascores<-function(elpafiledirectory = ".") {
   for (f in fl) {
     data<-utils::read.csv(f,colClasses="character")
     names(data)<-str_replace(str_replace(names(data),".*Summative\\.","")," ",".")
-#    names(data)[1]<-c("Student.Name")
-#    names(data)[14:18]<-c("Summative.ScaleScore","Summative.ScaleScore.Standard.Error",
-#                          "Summative.Comprehension.ScaleScore","Comprehension.ScaleScore.Standard.Error",
-#                          "Summative.PerformanceLevel")
     merged<-bind_rows(merged,data)
   }
   merged
@@ -172,17 +161,16 @@ helper.isvalidelpa<-function(ds=NULL) {
 #' \code{helper.isvalidelpa()} function.
 #'
 #' @param ds A dataset read by the \code{readelpadata()} function
-#' @param SchoolYear (deprecated) Use the second word of the "Tested.Reason"
-#' column from the imported dataset.
+#' @param SchoolYear (deprecated) Use the year of Date Taken -- assumes
+#' summative ELPA test is given in the spring (second) semester.
 #'
 #' @return data frame formatted as ELPA data for this package
 #' @export
 helper.reducedata<-function(ds,SchoolYear=NULL) {
   ds %>%
-    dplyr::filter(.data$Performance.Level != 'Not Attempted') %>%
+    dplyr::filter(.data$Proficiency.Status != 'Not Attempted') %>%
     dplyr::mutate(
       SY=stringr::str_sub(Date.Taken,-4)
-
                   ) %>%
     dplyr::select(
       SY=.data$SY,
@@ -191,7 +179,7 @@ helper.reducedata<-function(ds,SchoolYear=NULL) {
       School=.data$Enrolled.School,
       Ethnicity=.data$Ethnicity,
       Scale.Score=.data.Overall.Scale.Score,
-      Performance.Level=.data$Performance.Level
+      Performance.Level=.data$Proficiency.Status
   )
 }
 
