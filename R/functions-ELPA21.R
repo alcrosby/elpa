@@ -99,7 +99,7 @@ readelpascores<-function(elpafiledirectory = "./") {
       names(workfiles[[g]][["data"]])<-stringr::str_replace(stringr::str_replace(names(workfiles[[g]][["data"]]),".*Summative\\.","")," ",".")
       merged<-bind_rows(merged,workfiles[[g]][["data"]])
   }
-  if (isnull(merged)) stop("Did not find any elpa files.")
+  if (is.null(merged)) stop("Did not find any elpa files.")
   merged
 }
 
