@@ -171,11 +171,7 @@ helper.reducedata<-function(ds,SchoolYear=NULL) {
   ds %>%
     dplyr::filter(.data$Proficiency.Status != 'Not Attempted') %>%
     dplyr::mutate(
-<<<<<<< HEAD
       SY=stringr::str_sub(.data$Date.Taken,-4)
-=======
-      SY=stringr::str_sub(Date.Taken,-4)
->>>>>>> ef4f5c08442364fb9bcf08c1c15f7525c571dbb7
                   ) %>%
     dplyr::select(
       SY=.data$SY,
@@ -183,11 +179,7 @@ helper.reducedata<-function(ds,SchoolYear=NULL) {
       Enrolled.Grade=.data$Enrolled.Grade,
       School=.data$Enrolled.School,
       Ethnicity=.data$Ethnicity,
-<<<<<<< HEAD
       Scale.Score=.data$Overall.Scale.Score,
-=======
-      Scale.Score=.data.Overall.Scale.Score,
->>>>>>> ef4f5c08442364fb9bcf08c1c15f7525c571dbb7
       Performance.Level=.data$Proficiency.Status
   )
 }
