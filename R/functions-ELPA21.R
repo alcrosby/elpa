@@ -75,6 +75,8 @@ readelpascores<-function(elpafiledirectory = "./") {
 
   # Note: There is no district name supplied so this code could be shared with others...
 
+  if (!dir.exists(elpafiledirectory)) stop(paste("Could not find ELPA files directory: ",eplafiledirectory))
+
   workfiles<-NULL
 
   workfiles[["K"]] <- findnewestfile(".*(KindergartenELPA).*(Summative).*(csv)$",path=elpafiledirectory,colClasses="character")
@@ -97,6 +99,7 @@ readelpascores<-function(elpafiledirectory = "./") {
       names(workfiles[[g]][["data"]])<-stringr::str_replace(stringr::str_replace(names(workfiles[[g]][["data"]]),".*Summative\\.","")," ",".")
       merged<-bind_rows(merged,workfiles[[g]][["data"]])
   }
+  if (isnull(merged)) stop("Did not find any elpa files.")
   merged
 }
 
