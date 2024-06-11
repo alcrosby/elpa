@@ -94,10 +94,8 @@ readelpascores<-function(elpafiledirectory = "./") {
   # Fix column names and create a single "merged" dataset for the entire district...  Expects fields to have names like "Grade 10 ELPA21 Summative Overall Composite Scaled Score Standard Error"
   merged<-NULL
   for (g in names(workfiles)) {
-    if (!is.null(workfiles[[g]])) {
       names(workfiles[[g]][["data"]])<-stringr::str_replace(stringr::str_replace(names(workfiles[[g]][["data"]]),".*Summative\\.","")," ",".")
       merged<-bind_rows(merged,workfiles[[g]][["data"]])
-    }
   }
   merged
 }
