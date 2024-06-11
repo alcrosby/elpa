@@ -95,11 +95,7 @@ readelpascores<-function(elpafiledirectory = "./") {
   merged<-NULL
   for (g in names(workfiles)) {
     if (!is.null(workfiles[[g]])) {
-<<<<<<< HEAD
       names(workfiles[[g]][["data"]])<-stringr::str_replace(stringr::str_replace(names(workfiles[[g]][["data"]]),".*Summative\\.","")," ",".")
-=======
-      names(workfiles[[g]][["data"]])<-str_replace(str_replace(names(workfiles[[g]][["data"]]),".*Summative\\.","")," ",".")
->>>>>>> ef4f5c08442364fb9bcf08c1c15f7525c571dbb7
       merged<-bind_rows(merged,workfiles[[g]][["data"]])
     }
   }
@@ -132,11 +128,7 @@ readallelpascores<-function(elpafiledirectory = ".") {
   merged <- NULL
   for (f in fl) {
     data<-utils::read.csv(f,colClasses="character")
-<<<<<<< HEAD
     names(data)<-stringr::str_replace(stringr::str_replace(names(data),".*Summative\\.","")," ",".")
-=======
-    names(data)<-str_replace(str_replace(names(data),".*Summative\\.","")," ",".")
->>>>>>> ef4f5c08442364fb9bcf08c1c15f7525c571dbb7
     merged<-bind_rows(merged,data)
   }
   merged
